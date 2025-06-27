@@ -19,6 +19,8 @@ class CheckoutManager:
 
     @classmethod
     def add_grocery(cls, grocery):
+        if (grocery.quantity < 0 or grocery.price < 0):
+            raise ValueError("Quantity and price must be non-negative.")
         cls.groceries.append(Grocery(
             id=grocery.id,
             quantity=grocery.quantity,
@@ -39,8 +41,11 @@ class CheckoutManager:
         cls.vat = (cls.total * cls.vat)
 
     @classmethod
-    def display_vouchar(cls):
+    def calculate_net_total(cls):
         cls.net_total = cls.total - cls.vat
+    
+    @classmethod
+    def display_vouchar(cls):
         print("Voucher:")
         print("ID\t\tQuantity\tPrice\tTotal")
         for grocery in cls.groceries:
@@ -54,19 +59,24 @@ class CheckoutManager:
     def check_duplicacy_error(cls):
         ids = [grocery.id for grocery in cls.groceries]
         if len(ids) != len(set(ids)):
-            raise ValueError("Duplicate IDs found in the grocery list. Please ensure all products are unique.")
+            raise IndexError("Duplicate IDs found in the grocery list. Please ensure all products are unique.")
 
 
-file = pd.read_csv("files/groceryitems.csv")
-for index, row in file.iterrows():
-    CheckoutManager.add_grocery(Grocery(
-        id=row['id'],
-        quantity=row['quantity'],
-        price=row['price']
-    ))
-    CheckoutManager.check_duplicacy_error()
+try:
+    file = pd.read_csv("files/groceryitems.csv")
+    for index, row in file.iterrows():
+        CheckoutManager.add_grocery(Grocery(
+            id=row['id'],
+            quantity=row['quantity'],
+            price=row['price']
+        ))
+        CheckoutManager.check_duplicacy_error()
 
-CheckoutManager.total_quantity()
-CheckoutManager.calculate_total()
-CheckoutManager.include_vat()
-CheckoutManager.display_vouchar()
+    CheckoutManager.total_quantity()
+    CheckoutManager.calculate_total()
+    CheckoutManager.include_vat()
+    CheckoutManager.calculate_net_total()
+    CheckoutManager.display_vouchar()
+
+except Exception as e:
+    print(f"Error: {e}")

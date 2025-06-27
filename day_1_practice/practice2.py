@@ -8,8 +8,15 @@ class CalculateSalary:
     min_index = []
     max_index = []
 
+
+    @staticmethod
+    def check_salary(information):
+        for index, info in enumerate(information):
+            if info.salary <= 0:
+                raise ValueError("Salary must be a positive value(>0)")
+
     @classmethod
-    def min_max_salary(cls, information):
+    def get_min_salary(cls, information):
         for index, info in enumerate(information):
             if info.salary < cls.min_salary:
                 cls.min_salary = info.salary
@@ -17,6 +24,9 @@ class CalculateSalary:
             elif info.salary == cls.min_salary:
                 cls.min_index.append(index)
 
+    @classmethod
+    def get_max_salary(cls, information):
+        for index, info in enumerate(information):
             if info.salary > cls.max_salary:
                 cls.max_salary = info.salary
                 cls.max_index = [index]
@@ -37,12 +47,16 @@ class Info(BaseModel):
 
 
 information = []
-file = pd.read_csv("files/salarysheet.csv")
-print("File content:\n", file)
-for index, row in file.iterrows():
-    info = Info(name=row['name'], salary=row['salary'])
-    information.append(info)
+try:
+    file = pd.read_csv("files/salarysheet.csv")
+    print("File content:\n", file)
+    for index, row in file.iterrows():
+        info = Info(name=row['name'], salary=row['salary'])
+        information.append(info)
 
-CalculateSalary.min_max_salary(information)
-CalculateSalary.display_result(information)
-
+    CalculateSalary.check_salary(information)
+    CalculateSalary.get_min_salary(information)
+    CalculateSalary.get_max_salary(information)
+    CalculateSalary.display_result(information)
+except Exception as e:
+    print(f"Error: {e}")

@@ -22,15 +22,17 @@ class CreditCard:
 
     @classmethod
     def create_pin(cls, pin: int):
-        if len(str(pin)) != 4:
+        if len(str(pin)) == 4:
+            cls.__secret_pin = pin
+        else:
             raise ValueError("PIN must be a 4-digit integer")
-        cls.__secret_pin = pin
+        
     
     @classmethod
     def withdraw(cls, my_account, amount: float, pin: int):
 
         if pin != CreditCard.__secret_pin:
-            raise ValueError("Incorrect PIN")
+            raise KeyError("Incorrect PIN")
         else:
             if amount > cls.maximum_limit:
                 raise ValueError("Withdrawal limit exceeded: Maximum withdrawal is 500,000")
@@ -44,41 +46,49 @@ class CreditCard:
             if amount > 20000:
                 raise ValueError("Daily Withdrawal limit exceeded: Maximum withdrawal is 20,000")
         
-            if date.today() != CreditCard.__last_withdrawal_date or date.today() == CreditCard.__last_withdrawal_date and CreditCard.daily_limit>= amount:
-                CreditCard.__last_withdrawal_date = date.today()
+            if cls.daily_limit >= amount:
                 my_account.balance -= amount
                 cls.daily_limit -= amount
-                print(f"Withdrew {amount} from account {my_account.account_number} new balance is {my_account.balance}")
+                if cls.__last_withdrawal_date != date.today():
+                    cls.__last_withdrawal_date = date.today()
                 
             else:
                 raise ValueError("Daily withdrawal limit exceeded")
 
+            return amount
+
     @classmethod
-    def payment(cls, my_account, amount: float):
-        if amount > my_account.balance:
-            raise ValueError("Insufficient funds for payment")
-
-        if amount < 0:
-            raise ValueError("Payment amount must be positive")
-
-        if amount > cls.maximum_limit:
-            raise ValueError("Payment limit exceeded: Maximum payment is 500,000")
+    def payment(cls, my_account, amount: float, pin: int):
+        if pin != CreditCard.__secret_pin:
+            raise KeyError("Incorrect PIN")
         
-        my_account.balance -= amount
-        print(f"Payment of {amount} made from account {my_account.account_number} new balance is {my_account.balance}")
+        else:
+            if amount > my_account.balance:
+                raise ValueError("Insufficient funds for payment")
+
+            if amount < 0:
+                raise ValueError("Payment amount must be positive")
+
+            if amount > cls.maximum_limit:
+                raise ValueError("Payment limit exceeded: Maximum payment is 500,000")
+            
+            my_account.balance -= amount
+            return amount
 
 
 my_account = MyAccount(account_number="65874123", account_name="Antor", balance=500000.0)
-if CreditCard._CreditCard__secret_pin is None:
-    CreditCard.create_pin(1234)
-CreditCard.set_daily_limit()
-for _ in range(7):
-    try:
-        CreditCard.withdraw(my_account, amount=20000.0, pin=1234)
-    except ValueError as e:
-        print(f"Error: {e}")
-    try:
 
-        CreditCard.payment(my_account, amount=10000.0)
-    except ValueError as e:
-        print(f"Error: {e}")
+try:
+    if CreditCard._CreditCard__secret_pin is None:
+        CreditCard.create_pin(1234)
+    
+    CreditCard.set_daily_limit()
+    for _ in range(7):
+        amount = CreditCard.withdraw(my_account, amount=20000.0, pin=1234)
+        print(f"Withdrawal of 20,000 made from account {my_account.account_number} new balance is {my_account.balance}")
+
+        amount = CreditCard.payment(my_account, amount=10000.0, pin=1234)
+        print(f"Payment of {amount} made from account {my_account.account_number} new balance is {my_account.balance}")
+
+except Exception as e:
+    print(f"Error:{e}")
